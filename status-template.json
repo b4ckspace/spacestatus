@@ -1,0 +1,103 @@
+{
+    "api": "0.13",
+    "space": "backspace",
+    "logo": "https://www.hackerspace-bamberg.de/skins/kiwi/images/backspace_logo.png",
+    "url": "https://www.hackerspace-bamberg.de",
+    "location": {
+        "address": "Spiegelgraben 41, 96052 Bamberg, Bavaria, Germany",
+        "lat": 49.901927,
+        "lon": 10.892739
+    },
+    "contact": {
+        "phone": "+4995118505145",
+        "irc": "irc://freenode/#backspace",
+        "facebook": "https://www.facebook.com/hackerspace.bamberg",
+        "google": {
+            "plus": "https://plus.google.com/116003874054937500169"
+        },
+        "twitter": "@b4ckspace",
+        "email": "info@hackerspace-bamberg.de",
+        "ml": "public@lists.hackerspace-bamberg.de"
+    },
+    "sensors": {
+        "people_now_present": [
+            {
+                "value": {{"sensor/space/member/names" | mqtt | csvlen}},
+                "names": {{"sensor/space/member/names" | mqtt | jsonlist}}
+            }
+        ],
+        "space_members": [
+            {
+                "value": {{"sensor/space/member/count" | mqtt}}
+            }
+        ],
+        "temperature": [
+            {
+                "value": {{"sensor/temperature/lounge/podest" | mqtt}},
+                "unit": "\u00b0C",
+                "location": "Lounge Podest"
+            },
+            {
+                "value":{{"sensor/temperature/lounge/ceiling"|mqtt}},
+                "unit": "\u00b0C",
+                "location": "Lounge"
+            },
+            {
+                "value": {{"sensor/temperature/hackcenter/shelf"|mqtt}},
+                "unit": "\u00b0C",
+                "location": "Hackcenter"
+            }
+        ],
+        "power_consumption": [
+            {
+                "value": {{"sensor/power/main/L1"|mqtt}},
+                "unit": "W",
+                "location": "Power Phase 1"
+            },
+            {
+                "value": {{"sensor/power/main/L2"|mqtt}},
+                "unit": "W",
+                "location": "Power Phase 2"
+            },
+            {
+                "value": {{"sensor/power/main/L3"|mqtt}},
+                "unit": "W",
+                "location": "Power Phase 3"
+            },
+            {
+                "value": {{"sensor/power/main/total"|mqtt}},
+                "unit": "W",
+                "location": "Power Total"
+            }
+        ]
+    },
+    "feeds": {
+        "blog": {
+            "url": "https://www.hackerspace-bamberg.de/index.php?title=Blog:Backspace_blog&feed=atom"
+        },
+        "calendar": {
+            "type": "ical",
+            "url": "https://calendar.google.com/calendar/ical/schinken%40hackerspace-bamberg.de/public/basic.ics"
+        },
+        "wiki": {
+            "url": "https://www.hackerspace-bamberg.de/"
+        }
+    },
+    "state": {
+        "open": {{if eq ("sensor/space/status"|mqtt) "open"}}true{{else}}false{{end}},
+        "status": "{{"sensor/space/member/deviceCount"|mqtt}} devices connected",
+        "icon": {
+            "open": "http://status.bckspc.de/status_open_100x100.png",
+            "closed": "http://status.bckspc.de/status_closed_100x100.png"
+        }
+    },
+    "issue_report_channels": [
+        "email"
+    ],
+    "ext_ccc": "erfa",
+    "icon": {
+        "open": "http://status.bckspc.de/status_open_100x100.png",
+        "closed": "http://status.bckspc.de/status_closed_100x100.png"
+    },
+    "open": true
+}
