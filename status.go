@@ -20,6 +20,11 @@ var (
 	update chan mqtt.Message
 )
 
+type config struct {
+	server *url.URL
+	debug  bool
+}
+
 func main() {
 	// exit handler
 	s := make(chan os.Signal, 1)
@@ -34,13 +39,20 @@ func main() {
 		}
 	}()
 
-	// open mqtt connection
-	u, err := url.Parse("tcp://mqtt.core.bckspc.de:1883")
+	// config
+	var err error
+	c := config{}
+	server := getEnv("MQTT_URL", "tcp://mqtt.core.bckspc.de:1883")
+	c.server, err = url.Parse(server)
 	if err != nil {
 		log.Fatal(err)
 	}
+	_, c.debug = os.LookupEnv("DEBUG")
+	log.SetLevel(log.DebugLevel)
+
+	// open mqtt connection
 	m := mqtt.NewClient(&mqtt.ClientOptions{
-		Servers:          []*url.URL{u},
+		Servers:          []*url.URL{c.server},
 		ClientID:         "go-mqtt-spacestatus",
 		AutoReconnect:    true,
 		OnConnect:        func(c mqtt.Client) { log.Info("connected") },
@@ -95,4 +107,11 @@ func main() {
 
 	<-s
 	log.Info("exiting...")
+}
+
+func getEnv(key string, fallback string) string {
+	if value, ok := os.LookupEnv(key); ok {
+		return value
+	}
+	return fallback
 }
