@@ -70,7 +70,7 @@ func main() {
 			l := strings.Split(csv, ", ")
 			return fmt.Sprintf("%d", len(l))
 		},
-		"jsonlist": func(csv string) string {
+		"csvlist": func(csv string) string {
 			l := strings.Split(csv, ", ")
 			b, _ := json.Marshal(l)
 			return string(b)

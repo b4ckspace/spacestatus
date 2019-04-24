@@ -23,7 +23,7 @@
         "people_now_present": [
             {
                 "value": {{"sensor/space/member/names" | mqtt | csvlen}},
-                "names": {{"sensor/space/member/names" | mqtt | jsonlist}}
+                "names": {{"sensor/space/member/names" | mqtt | csvlist}}
             }
         ],
         "space_members": [
