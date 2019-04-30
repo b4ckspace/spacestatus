@@ -14,6 +14,7 @@ import (
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 	log "github.com/sirupsen/logrus"
 
+	"github.com/b4ckspace/spacestatus/metrics"
 )
 
 type config struct {
@@ -81,9 +82,11 @@ func setupMqtt() error {
 		ClientID:      "go-mqtt-spacestatus",
 		AutoReconnect: true,
 		OnConnect: func(c mqtt.Client) {
+			metrics.Count("spacestatus_mqtt{state=\"connected\"}")
 			log.Info("connected")
 		},
 		OnConnectionLost: func(c mqtt.Client, err error) {
+			metrics.Count("spacestatus_mqtt{state=\"disconnected\"}")
 			log.Errorf("connection lost: %v", err)
 		},
 	})
@@ -96,6 +99,7 @@ func setupMqtt() error {
 	}
 
 	m.Subscribe("#", 0, func(c mqtt.Client, m mqtt.Message) {
+		metrics.Count("spacestatus_mqtt{state=\"message\"}")
 		log.Debugf("%s: %s", m.Topic(), string(m.Payload()))
 		update <- m
 	})
@@ -110,7 +114,12 @@ func setupMqtt() error {
 func loadTemplates() (*template.Template, error) {
 	funcMap := template.FuncMap{
 		"mqtt": func(t string) string {
-			value := cache[t]
+			value, found := cache[t]
+			if found {
+				metrics.Count("spacestatus_mqtt_query{state=\"success\"}")
+			} else {
+				metrics.Count("spacestatus_mqtt_query{state=\"failed\"}")
+			}
 			return value
 		},
 		"csvlen": func(csv string) string {
@@ -128,6 +137,7 @@ func loadTemplates() (*template.Template, error) {
 
 func serve(tmpl *template.Template) {
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		metrics.Count("spacestatus_requests")
 		w.Header().Add("content-type", "application/json")
 		_ = tmpl.ExecuteTemplate(w, "status-template.json", nil)
 	})
