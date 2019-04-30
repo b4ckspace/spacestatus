@@ -13,17 +13,19 @@ import (
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 	log "github.com/sirupsen/logrus"
-)
 
-var (
-	cache  map[string]string
-	update chan mqtt.Message
 )
 
 type config struct {
 	server *url.URL
 	debug  bool
 }
+
+var (
+	c      config
+	cache  map[string]string
+	update chan mqtt.Message
+)
 
 func main() {
 	// exit handler
@@ -40,39 +42,72 @@ func main() {
 	}()
 
 	// config
-	var err error
-	c := config{}
-	server := getEnv("MQTT_URL", "tcp://mqtt.core.bckspc.de:1883")
-	c.server, err = url.Parse(server)
+	err := configure()
 	if err != nil {
 		log.Fatal(err)
 	}
-	_, c.debug = os.LookupEnv("DEBUG")
-	log.SetLevel(log.DebugLevel)
 
-	// open mqtt connection
+	// mqtt
+	err = setupMqtt()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// template
+	tmpl, err := loadTemplates()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// metrics
+	metrics.Register()
+
+	// serve http
+	serve(tmpl)
+	<-s
+	log.Info("exiting...")
+}
+
+func getEnv(key string, fallback string) string {
+	if value, ok := os.LookupEnv(key); ok {
+		return value
+	}
+	return fallback
+}
+
+func setupMqtt() error {
 	m := mqtt.NewClient(&mqtt.ClientOptions{
-		Servers:          []*url.URL{c.server},
-		ClientID:         "go-mqtt-spacestatus",
-		AutoReconnect:    true,
-		OnConnect:        func(c mqtt.Client) { log.Info("connected") },
-		OnConnectionLost: func(c mqtt.Client, err error) { log.Errorf("connection lost: %v", err) },
+		Servers:       []*url.URL{c.server},
+		ClientID:      "go-mqtt-spacestatus",
+		AutoReconnect: true,
+		OnConnect: func(c mqtt.Client) {
+			log.Info("connected")
+		},
+		OnConnectionLost: func(c mqtt.Client, err error) {
+			log.Errorf("connection lost: %v", err)
+		},
 	})
 	t := m.Connect()
 	for !t.WaitTimeout(1 * time.Second) {
 		log.Println("waiting for mqtt")
 	}
 	if err := t.Error(); err != nil {
-		log.Fatal(err)
+		return err
 	}
 
-	// subscribe to all mqtt topics
 	m.Subscribe("#", 0, func(c mqtt.Client, m mqtt.Message) {
+		log.Debugf("%s: %s", m.Topic(), string(m.Payload()))
 		update <- m
 	})
-	log.Println("subscribed")
+	if err := t.Error(); err != nil {
+		return err
+	}
 
-	// template
+	log.Println("subscribed")
+	return nil
+}
+
+func loadTemplates() (*template.Template, error) {
 	funcMap := template.FuncMap{
 		"mqtt": func(t string) string {
 			value := cache[t]
@@ -88,30 +123,33 @@ func main() {
 			return string(b)
 		},
 	}
-	tmpl, err := template.New("base").Funcs(funcMap).ParseFiles("status-template.json")
-	if err != nil {
-		log.Fatal(err)
-	}
+	return template.New("base").Funcs(funcMap).ParseFiles("status-template.json")
+}
 
-	// serve http
+func serve(tmpl *template.Template) {
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Add("content-type", "application/json")
-		_ = tmpl.ExecuteTemplate(w, "status-template.json", map[string]string{"test": "test"})
+		_ = tmpl.ExecuteTemplate(w, "status-template.json", nil)
 	})
+	http.HandleFunc("/favicon.ico", func(w http.ResponseWriter, r *http.Request) {})
 	go func() {
-		err = http.ListenAndServe(":8080", nil)
+		err := http.ListenAndServe(":8080", nil)
 		if err != nil {
 			log.Fatal(err)
 		}
 	}()
-
-	<-s
-	log.Info("exiting...")
 }
 
-func getEnv(key string, fallback string) string {
-	if value, ok := os.LookupEnv(key); ok {
-		return value
+func configure() (err error) {
+	c = config{}
+	server := getEnv("MQTT_URL", "tcp://mqtt:1883")
+	c.server, err = url.Parse(server)
+	if err != nil {
+		return err
 	}
-	return fallback
+	_, c.debug = os.LookupEnv("DEBUG")
+	if c.debug {
+		log.SetLevel(log.DebugLevel)
+	}
+	return nil
 }
