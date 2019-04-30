@@ -1,0 +1,18 @@
+kind: pipeline
+name: default
+
+steps:
+  - name: test
+    image: golang:alpine
+    environment:
+      CGO_ENABLED: 0
+    commands:
+      - apk add --no-cache git
+      - go mod tidy
+      - go test
+      - go build -o spacestatus .
+      - tar cvpzf spacestatus.tgz spacestatus status-template.json
+
+services:
+  - name: mqtt
+    image: eclipse-mosquitto

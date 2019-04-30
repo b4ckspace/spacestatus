@@ -6,6 +6,7 @@ import (
 	"net/url"
 	"strings"
 	"testing"
+	"time"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"github.com/google/go-cmp/cmp"
@@ -20,7 +21,7 @@ func TestMqtt(t *testing.T) {
 
 	m := mqtt.NewClient(&mqtt.ClientOptions{
 		Servers:          []*url.URL{c.server},
-		ClientID:         "go-mqtt-spacestatus-2",
+		ClientID:         "go-mqtt-spacestatus-test",
 		AutoReconnect:    true,
 		OnConnect:        func(c mqtt.Client) { log.Info("connected") },
 		OnConnectionLost: func(c mqtt.Client, err error) { log.Errorf("connection lost: %v", err) },
@@ -29,10 +30,10 @@ func TestMqtt(t *testing.T) {
 	log.Infof("%+v", token)
 
 	go main()
+	<-time.After(1 * time.Second)
 
 	_ = m.Publish("sensor/space/member/names", 0, false, "a, b, c, d")
 	_ = m.Publish("sensor/space/member/count", 0, false, "30")
-	_ = m.Publish("sensor/temperature/lounge/podest", 0, false, "22.3")
 	_ = m.Publish("sensor/temperature/lounge/podest", 0, false, "23.3")
 	_ = m.Publish("sensor/temperature/lounge/ceiling", 0, false, "24.3")
 	_ = m.Publish("sensor/temperature/hackcenter/shelf", 0, false, "21.3")
