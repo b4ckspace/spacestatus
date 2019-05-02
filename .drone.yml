@@ -13,6 +13,20 @@ steps:
       - go build -o spacestatus .
       - tar cvpzf spacestatus.tgz spacestatus status-template.json
 
+  - name: release
+    image: plugins/github-release
+    settings:
+      api_key:
+        from_secret: github_token
+      files:
+        - spacestatus.tgz
+      checksum:
+        - md5
+        - sha1
+        - sha256
+    when:
+      event: tag
+
 services:
   - name: mqtt
     image: eclipse-mosquitto
