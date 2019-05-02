@@ -1,3 +1,5 @@
+[![Build Status](https://cloud.drone.io/api/badges/b4ckspace/spacestatus/status.svg)](https://cloud.drone.io/b4ckspace/spacestatus)
+
 # go-mqtt-spacestatus
 
 A simple go implementation of *spaceapi* that whatches all mqtt topics and caches there last value.
