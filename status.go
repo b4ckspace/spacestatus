@@ -2,11 +2,11 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"net/url"
 	"os"
 	"os/signal"
+	"strconv"
 	"strings"
 	"text/template"
 	"time"
@@ -122,14 +122,76 @@ func loadTemplates() (*template.Template, error) {
 			}
 			return value
 		},
-		"csvlen": func(csv string) string {
-			l := strings.Split(csv, ", ")
-			return fmt.Sprintf("%d", len(l))
+		"csvlist": func(csv string) []string {
+			return strings.Split(csv, ", ")
 		},
-		"csvlist": func(csv string) string {
-			l := strings.Split(csv, ", ")
-			b, _ := json.Marshal(l)
-			return string(b)
+		"jsonize": func(mustType string, data interface{}) string {
+			var err error
+			var dataString string
+			oldData := data
+			ok := false
+			switch mustType {
+			case "string":
+				_, ok = data.(string)
+				if !ok {
+					data = ""
+				}
+			case "bool":
+				_, ok = data.(bool)
+				if !ok {
+					dataString, ok = data.(string)
+					data, err = strconv.ParseBool(dataString)
+					if err != nil {
+						ok = false
+					}
+				}
+			case "int":
+				_, ok = data.(int)
+				if !ok {
+					dataString, ok = data.(string)
+					data, err = strconv.ParseInt(dataString, 10, 64)
+					if err != nil {
+						ok = false
+					}
+				}
+			case "float":
+				_, ok = data.(float64)
+				if !ok {
+					dataString, ok = data.(string)
+					data, err = strconv.ParseFloat(dataString, 64)
+					if err != nil {
+						ok = false
+					}
+				}
+			case "[]string":
+				_, ok = data.([]string)
+				if !ok {
+					data = []string{}
+				}
+			case "[]bool":
+				_, ok = data.([]bool)
+				if !ok {
+					data = []bool{}
+				}
+			case "[]int":
+				_, ok = data.([]int)
+				if !ok {
+					data = []int{}
+				}
+			case "[]float":
+				_, ok = data.([]float32)
+				if !ok {
+					data = []float32{}
+				}
+			}
+			if !ok {
+				log.Printf("Invalid format for jsonize, expected %s, data is %v", mustType, oldData)
+			}
+			encoded, err := json.Marshal(data)
+			if err != nil {
+				log.Println("Unable to jsonize %v", data)
+			}
+			return string(encoded)
 		},
 	}
 	return template.New("base").Funcs(funcMap).ParseFiles("status-template.json")

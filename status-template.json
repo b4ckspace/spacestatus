@@ -22,50 +22,50 @@
     "sensors": {
         "people_now_present": [
             {
-                "value": {{"sensor/space/member/names" | mqtt | csvlen}},
-                "names": {{"sensor/space/member/names" | mqtt | csvlist}}
+                "value": {{"sensor/space/member/names" | mqtt | csvlist | len | jsonize "int"}},
+                "names": {{"sensor/space/member/names" | mqtt | csvlist | jsonize "[]string"}}
             }
         ],
         "space_members": [
             {
-                "value": {{"sensor/space/member/count" | mqtt}}
+                "value": {{"sensor/space/member/count" | mqtt | jsonize "int"}}
             }
         ],
         "temperature": [
             {
-                "value": {{"sensor/temperature/lounge/podest" | mqtt}},
+                "value": {{"sensor/temperature/lounge/podest" | mqtt | jsonize "float"}},
                 "unit": "\u00b0C",
                 "location": "Lounge Podest"
             },
             {
-                "value":{{"sensor/temperature/lounge/ceiling"|mqtt}},
+                "value": {{"sensor/temperature/lounge/ceiling" | mqtt | jsonize "float"}},
                 "unit": "\u00b0C",
                 "location": "Lounge"
             },
             {
-                "value": {{"sensor/temperature/hackcenter/shelf"|mqtt}},
+                "value": {{"sensor/temperature/hackcenter/shelf" | mqtt | jsonize "float"}},
                 "unit": "\u00b0C",
                 "location": "Hackcenter"
             }
         ],
         "power_consumption": [
             {
-                "value": {{"sensor/power/main/L1"|mqtt}},
+                "value": {{"sensor/power/main/L1" | mqtt | jsonize "float"}},
                 "unit": "W",
                 "location": "Power Phase 1"
             },
             {
-                "value": {{"sensor/power/main/L2"|mqtt}},
+                "value": {{"sensor/power/main/L2" | mqtt | jsonize "float"}},
                 "unit": "W",
                 "location": "Power Phase 2"
             },
             {
-                "value": {{"sensor/power/main/L3"|mqtt}},
+                "value": {{"sensor/power/main/L3" | mqtt | jsonize "float"}},
                 "unit": "W",
                 "location": "Power Phase 3"
             },
             {
-                "value": {{"sensor/power/main/total"|mqtt}},
+                "value": {{"sensor/power/main/total" | mqtt | jsonize "float"}},
                 "unit": "W",
                 "location": "Power Total"
             }
@@ -84,8 +84,8 @@
         }
     },
     "state": {
-        "open": {{if eq ("sensor/space/status"|mqtt) "open"}}true{{else}}false{{end}},
-        "status": "{{"sensor/space/member/deviceCount"|mqtt}} devices connected",
+        "open": {{if eq ("sensor/space/status" | mqtt) "open"}}true{{else}}false{{end}},
+        "status": "{{"sensor/space/member/deviceCount" | mqtt | jsonize "int"}} devices connected",
         "icon": {
             "open": "http://status.bckspc.de/status_open_100x100.png",
             "closed": "http://status.bckspc.de/status_closed_100x100.png"
