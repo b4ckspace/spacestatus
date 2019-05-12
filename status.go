@@ -189,7 +189,7 @@ func loadTemplates() (*template.Template, error) {
 			}
 			encoded, err := json.Marshal(data)
 			if err != nil {
-				log.Println("Unable to jsonize %v", data)
+				log.Printf("Unable to jsonize %v", data)
 			}
 			return string(encoded)
 		},
