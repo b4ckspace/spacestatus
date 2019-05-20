@@ -22,7 +22,7 @@
     "sensors": {
         "people_now_present": [
             {
-                "value": {{"sensor/space/member/names" | mqtt | csvlist | len | jsonize "int"}},
+                "value": {{"sensor/space/member/present" | mqtt | jsonize "int"}},
                 "names": {{"sensor/space/member/names" | mqtt | csvlist | jsonize "[]string"}}
             }
         ],
