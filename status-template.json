@@ -99,5 +99,5 @@
         "open": "http://status.bckspc.de/status_open_100x100.png",
         "closed": "http://status.bckspc.de/status_closed_100x100.png"
     },
-    "open": true
+    "open": {{if eq ("sensor/space/status" | mqtt) "open"}}true{{else}}false{{end}}
 }
