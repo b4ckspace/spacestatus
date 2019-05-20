@@ -33,6 +33,7 @@ func TestMqtt(t *testing.T) {
 	<-time.After(1 * time.Second)
 
 	_ = m.Publish("sensor/space/member/names", 0, false, "a, b, c, d")
+	_ = m.Publish("sensor/space/member/present", 0, false, "4")
 	_ = m.Publish("sensor/space/member/count", 0, false, "30")
 	_ = m.Publish("sensor/temperature/lounge/podest", 0, false, "23.3")
 	_ = m.Publish("sensor/temperature/lounge/ceiling", 0, false, "24.3")
