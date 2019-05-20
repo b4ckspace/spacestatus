@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/url"
 	"os"
@@ -119,6 +120,7 @@ func loadTemplates() (*template.Template, error) {
 				metrics.Count("spacestatus_mqtt_query{state=\"success\"}")
 			} else {
 				metrics.Count("spacestatus_mqtt_query{state=\"failed\"}")
+				metrics.Count(fmt.Sprintf("spacestatus_mqtt_query_fails{state=\"%s\"}", t))
 			}
 			return value
 		},
