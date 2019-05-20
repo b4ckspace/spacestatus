@@ -123,6 +123,9 @@ func loadTemplates() (*template.Template, error) {
 			return value
 		},
 		"csvlist": func(csv string) []string {
+			if csv == "" {
+				return []string{}
+			}
 			return strings.Split(csv, ", ")
 		},
 		"jsonize": func(mustType string, data interface{}) string {
