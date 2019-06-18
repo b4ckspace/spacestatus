@@ -38,7 +38,7 @@ func Register() {
 		lock.Lock()
 		defer lock.Unlock()
 		for k, v := range counter {
-			fmt.Fprintf(w, "%s: %d\n", k, v)
+			fmt.Fprintf(w, "%s %d\n", k, v)
 		}
 	})
 }
