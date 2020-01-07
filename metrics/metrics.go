@@ -33,8 +33,8 @@ func Set(metric string, value int) {
 	}()
 }
 
-func Register() {
-	http.HandleFunc("/metrics", func(w http.ResponseWriter, r *http.Request) {
+func Register(mux *http.ServeMux) {
+	mux.HandleFunc("/metrics", func(w http.ResponseWriter, r *http.Request) {
 		lock.Lock()
 		defer lock.Unlock()
 		for k, v := range counter {

@@ -1,232 +1,120 @@
 package main
 
 import (
-	"encoding/json"
-	"fmt"
 	"net/http"
 	"net/url"
-	"os"
-	"os/signal"
-	"strconv"
-	"strings"
+	"sync"
 	"text/template"
 	"time"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
+	"github.com/kelseyhightower/envconfig"
 	log "github.com/sirupsen/logrus"
 
+	"github.com/b4ckspace/spacestatus/filters"
 	"github.com/b4ckspace/spacestatus/metrics"
 )
 
-type config struct {
-	server *url.URL
-	debug  bool
+type server struct {
+	MqttURL *url.URL `envconfig:"MQTT_URL"`
+	Debug   bool     `envconfig:"DEBUG"`
+
+	Cache *sync.Map
+
+	mux      *http.ServeMux
+	template *template.Template
 }
 
-var (
-	c      config
-	cache  map[string]string
-	update chan mqtt.Message
-)
-
 func main() {
-	// exit handler
-	s := make(chan os.Signal, 1)
-	signal.Notify(s, os.Interrupt)
-
-	// cache
-	cache = map[string]string{}
-	update = make(chan mqtt.Message)
-	go func() {
-		for m := range update {
-			cache[m.Topic()] = string(m.Payload())
-		}
-	}()
-
-	// config
-	err := configure()
+	s := &server{}
+	s.mux = http.NewServeMux()
+	err := envconfig.Process("", s)
 	if err != nil {
-		log.Fatal(err)
+		log.WithError(err).Fatalf("unable to process env")
+	}
+	if s.Debug {
+		log.SetLevel(log.DebugLevel)
 	}
 
 	// mqtt
-	err = setupMqtt()
+	err = s.connectMqtt()
 	if err != nil {
-		log.Fatal(err)
+		log.WithError(err).Fatalf("unable to connect mqtt")
 	}
 
 	// template
-	tmpl, err := loadTemplates()
+	err = s.loadTemplates()
 	if err != nil {
-		log.Fatal(err)
+		log.WithError(err).Fatalf("unable to load templates")
 	}
 
 	// metrics
-	metrics.Register()
+	metrics.Register(s.mux)
 
 	// serve http
-	serve(tmpl)
-	<-s
-	log.Info("exiting...")
+	s.serve()
 }
 
-func getEnv(key string, fallback string) string {
-	if value, ok := os.LookupEnv(key); ok {
-		return value
-	}
-	return fallback
-}
-
-func setupMqtt() error {
+func (s *server) connectMqtt() (err error) {
 	m := mqtt.NewClient(&mqtt.ClientOptions{
-		Servers:       []*url.URL{c.server},
-		ClientID:      "go-mqtt-spacestatus",
+		Servers:       []*url.URL{s.MqttURL},
+		ClientID:      "go-mqtt-spacestatus-dev",
 		AutoReconnect: true,
 		OnConnect: func(c mqtt.Client) {
 			metrics.Count("spacestatus_mqtt{state=\"connected\"}")
-			log.Info("connected")
+			log.Infof("connected")
 		},
 		OnConnectionLost: func(c mqtt.Client, err error) {
 			metrics.Count("spacestatus_mqtt{state=\"disconnected\"}")
-			log.Errorf("connection lost: %v", err)
+			log.WithError(err).Errorf("connection lost")
 		},
 	})
 	t := m.Connect()
-	for !t.WaitTimeout(1 * time.Second) {
-		log.Println("waiting for mqtt")
-	}
+	_ = t.Wait()
 	if err := t.Error(); err != nil {
 		return err
 	}
-
-	m.Subscribe("#", 0, func(c mqtt.Client, m mqtt.Message) {
+	t = m.Subscribe("#", 0, func(c mqtt.Client, m mqtt.Message) {
 		metrics.Count("spacestatus_mqtt{state=\"message\"}")
 		log.Debugf("%s: %s", m.Topic(), string(m.Payload()))
-		update <- m
+		s.Cache.Store(m.Topic(), string(m.Payload()))
 	})
+	t.Wait()
 	if err := t.Error(); err != nil {
 		return err
 	}
-
 	log.Println("subscribed")
-	return nil
+	return
 }
 
-func loadTemplates() (*template.Template, error) {
-	funcMap := template.FuncMap{
-		"mqtt": func(t string) string {
-			value, found := cache[t]
-			if found {
-				metrics.Count("spacestatus_mqtt_query{state=\"success\"}")
-			} else {
-				metrics.Count("spacestatus_mqtt_query{state=\"failed\"}")
-				metrics.Count(fmt.Sprintf("spacestatus_mqtt_query_fails{state=\"%s\"}", t))
-			}
-			return value
-		},
-		"csvlist": func(csv string) []string {
-			if csv == "" {
-				return []string{}
-			}
-			return strings.Split(csv, ", ")
-		},
-		"jsonize": func(mustType string, data interface{}) string {
-			var err error
-			var dataString string
-			oldData := data
-			ok := false
-			switch mustType {
-			case "string":
-				_, ok = data.(string)
-				if !ok {
-					data = ""
-				}
-			case "bool":
-				_, ok = data.(bool)
-				if !ok {
-					dataString, ok = data.(string)
-					data, err = strconv.ParseBool(dataString)
-					if err != nil {
-						ok = false
-					}
-				}
-			case "int":
-				_, ok = data.(int)
-				if !ok {
-					dataString, ok = data.(string)
-					data, err = strconv.ParseInt(dataString, 10, 64)
-					if err != nil {
-						ok = false
-					}
-				}
-			case "float":
-				_, ok = data.(float64)
-				if !ok {
-					dataString, ok = data.(string)
-					data, err = strconv.ParseFloat(dataString, 64)
-					if err != nil {
-						ok = false
-					}
-				}
-			case "[]string":
-				_, ok = data.([]string)
-				if !ok {
-					data = []string{}
-				}
-			case "[]bool":
-				_, ok = data.([]bool)
-				if !ok {
-					data = []bool{}
-				}
-			case "[]int":
-				_, ok = data.([]int)
-				if !ok {
-					data = []int{}
-				}
-			case "[]float":
-				_, ok = data.([]float32)
-				if !ok {
-					data = []float32{}
-				}
-			}
-			if !ok {
-				log.Printf("Invalid format for jsonize, expected %s, data is %v", mustType, oldData)
-			}
-			encoded, err := json.Marshal(data)
-			if err != nil {
-				log.Printf("Unable to jsonize %v", data)
-			}
-			return string(encoded)
-		},
-	}
-	return template.New("base").Funcs(funcMap).ParseFiles("status-template.json")
+func (s *server) loadTemplates() (err error) {
+	s.template, err = template.New("base").Funcs(template.FuncMap{
+		"mqtt":    filters.MqttLoadForCache(s.Cache),
+		"csvlist": filters.CsvList,
+		"jsonize": filters.Jsonize,
+	}).ParseFiles("status-template.json")
+	return
 }
 
-func serve(tmpl *template.Template) {
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+func (s *server) serve() (err error) {
+	s.mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		metrics.Count("spacestatus_requests")
 		w.Header().Add("content-type", "application/json")
-		_ = tmpl.ExecuteTemplate(w, "status-template.json", nil)
-	})
-	http.HandleFunc("/favicon.ico", func(w http.ResponseWriter, r *http.Request) {})
-	go func() {
-		err := http.ListenAndServe(":8080", nil)
+		err := s.template.ExecuteTemplate(w, "status-template.json", nil)
 		if err != nil {
-			log.Fatal(err)
+			log.WithError(err).Infof("unable to render template")
 		}
-	}()
-}
-
-func configure() (err error) {
-	c = config{}
-	server := getEnv("MQTT_URL", "tcp://mqtt:1883")
-	c.server, err = url.Parse(server)
-	if err != nil {
-		return err
+	})
+	s.mux.HandleFunc("/favicon.ico", func(w http.ResponseWriter, r *http.Request) {})
+	middleware := func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			start := time.Now()
+			next.ServeHTTP(w, r)
+			log.WithFields(log.Fields{
+				"duration": time.Since(start).String(),
+				"method":   r.Method,
+			}).Info(r.RequestURI)
+		})
 	}
-	_, c.debug = os.LookupEnv("DEBUG")
-	if c.debug {
-		log.SetLevel(log.DebugLevel)
-	}
-	return nil
+	return http.ListenAndServe(":8080", middleware(s.mux))
 }
