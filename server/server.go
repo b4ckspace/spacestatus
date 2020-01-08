@@ -17,6 +17,7 @@ import (
 
 type Server struct {
 	MqttURL *url.URL `envconfig:"MQTT_URL"`
+	Listen  string   `envconfig:"LISTEN" default:":8080"`
 	Debug   bool     `envconfig:"DEBUG"`
 
 	Cache *sync.Map
@@ -102,9 +103,11 @@ func (s *Server) ListenAndServe() (err error) {
 			}).Info(r.RequestURI)
 		})
 	}
-	return http.ListenAndServe(":8080", middleware(s.mux))
+	log.WithField("addr", s.Listen).Info("listening")
+	return http.ListenAndServe(s.Listen, middleware(s.mux))
 }
 
+// GetMux returns the http.ServeMux to add additional routes
 func (s *Server) GetMux() *http.ServeMux {
 	return s.mux
 }
