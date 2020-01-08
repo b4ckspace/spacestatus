@@ -8,6 +8,8 @@ import (
 )
 
 func main() {
+	log.SetFormatter(&log.JSONFormatter{})
+
 	// server
 	s, err := server.NewServer()
 	if err != nil {
