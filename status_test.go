@@ -8,19 +8,21 @@ import (
 	"testing"
 	"time"
 
+	"github.com/b4ckspace/spacestatus/server"
+
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"github.com/google/go-cmp/cmp"
 	log "github.com/sirupsen/logrus"
 )
 
 func TestMqtt(t *testing.T) {
-	err := configure()
+	s, err := server.NewServer()
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	m := mqtt.NewClient(&mqtt.ClientOptions{
-		Servers:          []*url.URL{c.server},
+		Servers:          []*url.URL{s.MqttURL},
 		ClientID:         "go-mqtt-spacestatus-test",
 		AutoReconnect:    true,
 		OnConnect:        func(c mqtt.Client) { log.Info("connected") },
