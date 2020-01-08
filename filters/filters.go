@@ -3,10 +3,11 @@ package filters
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"strconv"
 	"strings"
 	"sync"
+
+	log "github.com/sirupsen/logrus"
 
 	"github.com/b4ckspace/spacestatus/metrics"
 )
@@ -99,7 +100,7 @@ func Jsonize(mustType string, data interface{}) string {
 	}
 	encoded, err := json.Marshal(data)
 	if err != nil {
-		log.Printf("unable to jsonize %v", data)
+		log.WithError(err).Printf("unable to jsonize %v", data)
 	}
 	return string(encoded)
 }
