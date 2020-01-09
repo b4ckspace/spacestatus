@@ -7,11 +7,9 @@ steps:
     environment:
       CGO_ENABLED: 0
     commands:
-      - apk add --no-cache git
-      - go mod tidy
-      - go test
+      - go test ./...
       - go build -o spacestatus .
-      - tar cvpzf spacestatus.tgz spacestatus status-template.json
+      - tar cvpzf spacestatus.tgz spacestatus templates static
 
   - name: release
     image: plugins/github-release
