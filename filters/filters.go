@@ -96,11 +96,13 @@ func Jsonize(mustType string, data interface{}) string {
 		}
 	}
 	if !ok {
-		log.Printf("invalid format for jsonize, expected %s, data is %v", mustType, oldData)
+		log.WithError(
+			fmt.Errorf("expected %s, data is %v", mustType, oldData),
+		).Infof("invalid format for jsonize")
 	}
 	encoded, err := json.Marshal(data)
 	if err != nil {
-		log.WithError(err).Printf("unable to jsonize %v", data)
+		log.WithError(err).Infof("unable to jsonize %v", data)
 	}
 	return string(encoded)
 }

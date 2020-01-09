@@ -78,7 +78,10 @@ func (s *Server) LoadTemplates() (err error) {
 		"mqtt":    filters.MqttLoadForCache(s.Cache),
 		"csvlist": filters.CsvList,
 		"jsonize": filters.Jsonize,
-	}).ParseFiles("status-template.json")
+	}).ParseFiles("templates/status.json")
+	if err != nil {
+		return err
+	}
 	return
 }
 
@@ -87,7 +90,7 @@ func (s *Server) ListenAndServe() (err error) {
 	s.mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		metrics.Count("spacestatus_requests")
 		w.Header().Add("content-type", "application/json")
-		err := s.template.ExecuteTemplate(w, "status-template.json", nil)
+		err := s.template.ExecuteTemplate(w, "status.json", nil)
 		if err != nil {
 			log.WithError(err).Infof("unable to render template")
 		}

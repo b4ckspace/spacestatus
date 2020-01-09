@@ -57,7 +57,7 @@ func TestMqtt(t *testing.T) {
 		t.Errorf("Unable to load body: %v", err)
 	}
 
-	want, err := ioutil.ReadFile("status_test.json")
+	want, err := ioutil.ReadFile("testdata/status.json")
 	if err != nil {
 		t.Errorf("Unable to load want: %v", err)
 	}
