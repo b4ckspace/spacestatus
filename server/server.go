@@ -16,7 +16,7 @@ import (
 )
 
 type Server struct {
-	MqttURL *url.URL `envconfig:"MQTT_URL"`
+	MqttURL *url.URL `envconfig:"MQTT_URL" default:"tcp://mqtt:1883"`
 	Listen  string   `envconfig:"LISTEN" default:":8080"`
 	Debug   bool     `envconfig:"DEBUG"`
 
