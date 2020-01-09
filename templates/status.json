@@ -87,8 +87,8 @@
         "open": {{if eq ("sensor/space/status" | mqtt) "open"}}true{{else}}false{{end}},
         "status": "{{"sensor/space/member/deviceCount" | mqtt | jsonize "int"}} devices connected",
         "icon": {
-            "open": "http://status.bckspc.de/status_open_100x100.png",
-            "closed": "http://status.bckspc.de/status_closed_100x100.png"
+            "open": "http://status.bckspc.de/static/status_open_100x100.png",
+            "closed": "http://status.bckspc.de/static/status_closed_100x100.png"
         }
     },
     "issue_report_channels": [
@@ -96,8 +96,8 @@
     ],
     "ext_ccc": "erfa",
     "icon": {
-        "open": "http://status.bckspc.de/status_open_100x100.png",
-        "closed": "http://status.bckspc.de/status_closed_100x100.png"
+        "open": "http://status.bckspc.de/static/status_open_100x100.png",
+        "closed": "http://status.bckspc.de/static/status_closed_100x100.png"
     },
     "open": {{if eq ("sensor/space/status" | mqtt) "open"}}true{{else}}false{{end}}
 }

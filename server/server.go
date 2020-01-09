@@ -95,6 +95,7 @@ func (s *Server) ListenAndServe() (err error) {
 			log.WithError(err).Infof("unable to render template")
 		}
 	})
+	s.mux.Handle("/static/", http.StripPrefix("/static", http.FileServer(http.Dir("static"))))
 	s.mux.HandleFunc("/favicon.ico", func(w http.ResponseWriter, r *http.Request) {})
 	middleware := func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
