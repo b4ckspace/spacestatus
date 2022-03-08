@@ -29,16 +29,6 @@
         ],
         "temperature": [
             {
-                "value": {{"sensor/temperature/lounge/podest" | mqtt | jsonize "float"}},
-                "unit": "\u00b0C",
-                "location": "Lounge Podest"
-            },
-            {
-                "value": {{"sensor/temperature/lounge/ceiling" | mqtt | jsonize "float"}},
-                "unit": "\u00b0C",
-                "location": "Lounge"
-            },
-            {
                 "value": {{"sensor/temperature/hackcenter/shelf" | mqtt | jsonize "float"}},
                 "unit": "\u00b0C",
                 "location": "Hackcenter"
