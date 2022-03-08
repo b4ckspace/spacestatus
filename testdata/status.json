@@ -10,7 +10,7 @@
     },
     "contact": {
         "phone": "+4995118505145",
-        "irc": "irc://freenode/#backspace",
+        "irc": "irc://irc.libera.chat:6697/#backspace",
         "twitter": "@b4ckspace",
         "email": "info@hackerspace-bamberg.de",
         "ml": "public@lists.hackerspace-bamberg.de"
@@ -28,16 +28,6 @@
             }
         ],
         "temperature": [
-            {
-                "value": 23.3,
-                "unit": "\u00b0C",
-                "location": "Lounge Podest"
-            },
-            {
-                "value": 24.3,
-                "unit": "\u00b0C",
-                "location": "Lounge"
-            },
             {
                 "value": 21.3,
                 "unit": "\u00b0C",
@@ -65,7 +55,23 @@
                 "unit": "W",
                 "location": "Power Total"
             }
-        ]
+        ],
+        "radiation": {
+	    "beta_gamma": [
+                {
+                    "value": 42,
+                    "unit": "cpm",
+                    "location": "Indoor",
+                    "description": "MightyOhm Geiger Counter v1.0 (SBM-20 tube)"
+                },
+                {
+                    "value": 0.23,
+                    "unit": "µSv/h",
+                    "location": "Indoor",
+                    "description": "MightyOhm Geiger Counter v1.0 (SBM-20 tube)"
+                }
+	    ]
+        }
     },
     "feeds": {
         "blog": {

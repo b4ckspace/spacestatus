@@ -23,7 +23,7 @@ func TestMqtt(t *testing.T) {
 
 	m := mqtt.NewClient(&mqtt.ClientOptions{
 		Servers:          []*url.URL{s.MqttURL},
-		ClientID:         "go-mqtt-spacestatus-test",
+		ClientID:         s.MqttClientId,
 		AutoReconnect:    true,
 		OnConnect:        func(c mqtt.Client) { log.Info("connected") },
 		OnConnectionLost: func(c mqtt.Client, err error) { log.Errorf("connection lost: %v", err) },
@@ -37,8 +37,6 @@ func TestMqtt(t *testing.T) {
 	_ = m.Publish("sensor/space/member/names", 0, false, "a, b, c, d")
 	_ = m.Publish("sensor/space/member/present", 0, false, "4")
 	_ = m.Publish("sensor/space/member/count", 0, false, "30")
-	_ = m.Publish("sensor/temperature/lounge/podest", 0, false, "23.3")
-	_ = m.Publish("sensor/temperature/lounge/ceiling", 0, false, "24.3")
 	_ = m.Publish("sensor/temperature/hackcenter/shelf", 0, false, "21.3")
 	_ = m.Publish("sensor/power/main/L1", 0, false, "123")
 	_ = m.Publish("sensor/power/main/L2", 0, false, "234")
@@ -46,6 +44,8 @@ func TestMqtt(t *testing.T) {
 	_ = m.Publish("sensor/power/main/total", 0, false, "1234")
 	_ = m.Publish("sensor/space/status", 0, false, "closed")
 	_ = m.Publish("sensor/space/member/deviceCount", 0, false, "77")
+	_ = m.Publish("sensor/radiation/cpm", 0, false, "42")
+	_ = m.Publish("sensor/radiation/uSv", 0, false, "0.23")
 
 	resp, err := http.Get("http://localhost:8080/")
 	if err != nil {
