@@ -65,7 +65,23 @@
                 "unit": "W",
                 "location": "Power Total"
             }
-        ]
+        ],
+        "radiation": {
+	    "beta_gamma": [
+                {
+                    "value": {{"sensor/radiation/cpm" | mqtt | jsonize "int"}},
+                    "unit": "cpm",
+                    "location": "Indoor",
+                    "description": "MightyOhm Geiger Counter v1.0 (SBM-20 tube)"
+                },
+                {
+                    "value": {{"sensor/radiation/uSv" | mqtt | jsonize "float"}},
+                    "unit": "µSv/h",
+                    "location": "Indoor",
+                    "description": "MightyOhm Geiger Counter v1.0 (SBM-20 tube)"
+                }
+	    ]
+        }
     },
     "feeds": {
         "blog": {
