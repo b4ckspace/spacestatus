@@ -13,6 +13,7 @@ Simply run `go build`.
 Edit the `status-template.json` (go-template syntax) to your needs and run the tool. Configuration options can be set via environment variables.
 
 * `MQTT_URL`: URL of the MQTT server (default: `tcp://mqtt.core.bckspc.de:1883`)
+* `MQTT_CLIENT_ID`: set MQTT client id - must be unique! (default: `go-mqtt-spacestatus-dev`)
 * `DEBUG`: print MQTT topic changes, enabled when set, regardless of value
 
 ### Limitations

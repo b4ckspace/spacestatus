@@ -16,9 +16,10 @@ import (
 )
 
 type Server struct {
-	MqttURL *url.URL `envconfig:"MQTT_URL" default:"tcp://mqtt:1883"`
-	Listen  string   `envconfig:"LISTEN" default:":8080"`
-	Debug   bool     `envconfig:"DEBUG"`
+	MqttURL      *url.URL `envconfig:"MQTT_URL" default:"tcp://mqtt:1883"`
+	MqttClientId string   `envconfig:"MQTT_CLIENT_ID" default:"go-mqtt-spacestatus-dev"`
+	Listen       string   `envconfig:"LISTEN" default:":8080"`
+	Debug        bool     `envconfig:"DEBUG"`
 
 	Cache *sync.Map
 
@@ -43,7 +44,7 @@ func NewServer() (s *Server, err error) {
 func (s *Server) ConnectMqtt() (err error) {
 	m := mqtt.NewClient(&mqtt.ClientOptions{
 		Servers:       []*url.URL{s.MqttURL},
-		ClientID:      "go-mqtt-spacestatus-dev",
+		ClientID:      s.MqttClientId,
 		AutoReconnect: true,
 		OnConnect: func(c mqtt.Client) {
 			metrics.Count("spacestatus_mqtt{state=\"connected\"}")
