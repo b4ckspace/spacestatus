@@ -2,15 +2,19 @@
 
 # go-mqtt-spacestatus
 
-A simple go implementation of *spaceapi* that whatches all mqtt topics and caches there last value.
+A simple Go implementation of *spaceapi* that watches all MQTT topics and caches the last values.
+
+### Build
+
+Simply run `go build`.
 
 ### Usage
 
-Edit the `status-template.json` (go-template syntax) to your needs and run the tool. One can configuraiton options using environment variables.
+Edit the `status-template.json` (go-template syntax) to your needs and run the tool. Configuration options can be set via environment variables.
 
-* `MQTT_URL`: url of the mqtt server (default: `tcp://mqtt.core.bckspc.de:1883`)
-* `DEBUG`: print mqtt topic changes, enabled when set, regadless of value
+* `MQTT_URL`: URL of the MQTT server (default: `tcp://mqtt.core.bckspc.de:1883`)
+* `DEBUG`: print MQTT topic changes, enabled when set, regardless of value
 
 ### Limitations
 
-Currently its not possible to limit the mqtt topics cached.
+Currently it's not possible to limit the MQTT topics cached.
