@@ -23,7 +23,7 @@ func TestMqtt(t *testing.T) {
 
 	m := mqtt.NewClient(&mqtt.ClientOptions{
 		Servers:          []*url.URL{s.MqttURL},
-		ClientID:         s.MqttClientId,
+		ClientID:         "go-mqtt-spacestatus-test",
 		AutoReconnect:    true,
 		OnConnect:        func(c mqtt.Client) { log.Info("connected") },
 		OnConnectionLost: func(c mqtt.Client, err error) { log.Errorf("connection lost: %v", err) },
@@ -46,6 +46,8 @@ func TestMqtt(t *testing.T) {
 	_ = m.Publish("sensor/space/member/deviceCount", 0, false, "77")
 	_ = m.Publish("sensor/radiation/cpm", 0, false, "42")
 	_ = m.Publish("sensor/radiation/uSv", 0, false, "0.23")
+
+	<-time.After(1 * time.Second)
 
 	resp, err := http.Get("http://localhost:8080/")
 	if err != nil {
