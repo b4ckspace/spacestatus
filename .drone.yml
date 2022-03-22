@@ -7,7 +7,6 @@ steps:
     environment:
       CGO_ENABLED: 0
     commands:
-      - apk update && apk add --no-cache git
       - "until nc -z mqtt 1883; do sleep 1; done"
       - go test ./...
       - go build -o spacestatus .
