@@ -3,13 +3,13 @@ name: default
 
 steps:
   - name: test
-    image: golang:alpine
+    image: golang:1.17-alpine
     environment:
       CGO_ENABLED: 0
     commands:
       - "until nc -z mqtt 1883; do sleep 1; done"
-      - go test ./...
-      - go build -o spacestatus .
+      - go build -mod=vendor -o spacestatus .
+      - go test -mod=vendor ./...
       - tar cvpzf spacestatus.tgz spacestatus templates static
 
   - name: release
