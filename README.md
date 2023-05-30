@@ -1,5 +1,7 @@
 [![Build Status](https://cloud.drone.io/api/badges/b4ckspace/spacestatus/status.svg)](https://cloud.drone.io/b4ckspace/spacestatus)
 
+**Archived**: We have moved to https://www.home-assistant.io/integrations/spaceapi/
+
 # go-mqtt-spacestatus
 
 A simple Go implementation of *spaceapi* that watches all MQTT topics and caches the last values.
